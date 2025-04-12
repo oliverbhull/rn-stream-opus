@@ -22,7 +22,6 @@ def reactNativeArchitectures() {
 
 apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
-
 apply plugin: "com.facebook.react"
 
 def getExtOrIntegerDefault(name) {
@@ -61,22 +60,13 @@ android {
         cppFlags "-frtti -fexceptions -Wall -fstack-protector-all"
         arguments "-DANDROID_STL=c++_shared"
         abiFilters (*reactNativeArchitectures())
-
-        buildTypes {
-          debug {
-            cppFlags "-O1 -g"
-          }
-          release {
-            cppFlags "-O2"
-          }
-        }
       }
     }
   }
 
   externalNativeBuild {
     cmake {
-      path "CMakeLists.txt"
+      path "src/main/jni/CMakeLists.txt"
     }
   }
 
@@ -123,6 +113,6 @@ dependencies {
 
 react {
   jsRootDir = file("../src/")
-  libraryName = "Opus"
+  libraryName = "opus"
   codegenJavaPackageName = "com.opus"
 }

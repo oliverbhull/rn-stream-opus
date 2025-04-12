@@ -1,5 +1,7 @@
-import Opus from './NativeOpus';
+import OpusTurboModule from './NativeOpusTurboModule';
 
-export function multiply(a: number, b: number): number {
-  return Opus.multiply(a, b);
-}
+export const decodeMultipleOpusPackets = OpusTurboModule.decodeMultipleOpusPackets;
+export const resetDecoderState = OpusTurboModule.resetDecoderState;
+export const saveDecodedDataAsWav = OpusTurboModule.saveDecodedDataAsWav;
+
+export type { Spec as OpusTurboModuleSpec } from './NativeOpusTurboModule';

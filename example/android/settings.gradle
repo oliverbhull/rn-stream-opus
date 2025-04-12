@@ -4,3 +4,7 @@ extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autoli
 rootProject.name = 'opus.example'
 include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')
+
+// Include the React Native Opus module
+include ':react-native-opus'
+project(':react-native-opus').projectDir = new File(rootProject.projectDir, '../../android')

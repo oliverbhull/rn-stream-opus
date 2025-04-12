@@ -116,6 +116,9 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+    
+    // Add dependency on your module
+    implementation project(':react-native-opus')
 }
 
 // Run Codegen during development for the example app.
