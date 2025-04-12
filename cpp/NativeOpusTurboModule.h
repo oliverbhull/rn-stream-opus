@@ -23,7 +23,6 @@
 #endif
 
 namespace facebook::react {
-
 class NativeOpusTurboModule: public NativeOpusTurboModuleCxxSpec<NativeOpusTurboModule> {
 public:
     static constexpr const char* kModuleName = "OpusTurbo";
