@@ -150,15 +150,7 @@
   "codegenConfig": {
     "name": "RNOpusSpec",
     "type": "modules",
-    "jsSrcsDir": "src",
-    "outputDir": {
-      "ios": "ios/generated",
-      "android": "android/generated"
-    },
-    "android": {
-      "javaPackageName": "com.opus"
-    },
-    "includesGeneratedCode": true
+    "jsSrcsDir": "src"
   },
   "create-react-native-library": {
     "type": "turbo-module",
