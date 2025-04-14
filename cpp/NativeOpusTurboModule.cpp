@@ -7,7 +7,7 @@ namespace facebook::react {
 
 // Constructor: Create the single decoder instance
 NativeOpusTurboModule::NativeOpusTurboModule(std::shared_ptr<CallInvoker> jsinvoker)
-    : NativeOpusCxxSpec(std::move(jsinvoker)) {
+    : NativeOpusTurboModuleCxxSpec(std::move(jsinvoker)) {
     int error = 0;
     opusDecoder = opus_decoder_create(DEFAULT_SAMPLE_RATE, DEFAULT_CHANNELS, &error);
     if (error != OPUS_OK || !opusDecoder) {
