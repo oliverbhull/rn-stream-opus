@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "description": "opus for react native",
   "source": "./src/index.tsx",
-  "main": "./lib/module/index.js",
+  "main": "./lib/commonjs/index.js",
+  "module": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
     ".": {
