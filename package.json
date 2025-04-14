@@ -1,18 +1,11 @@
 {
   "name": "react-native-opus",
   "version": "0.1.0",
-  "description": "opus for react native",
+  "description": "Opus audio codec for React Native with C++ implementation",
   "source": "./src/index.tsx",
   "main": "./lib/commonjs/index.js",
+  "types": "./lib/typescript/commonjs/src/index.d.ts",
   "module": "./lib/module/index.js",
-  "types": "./lib/typescript/src/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./lib/typescript/src/index.d.ts",
-      "default": "./lib/module/index.js"
-    },
-    "./package.json": "./package.json"
-  },
   "files": [
     "src",
     "lib",
@@ -38,12 +31,19 @@
     "typecheck": "tsc",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
+    "prepare": "bob build",
     "release": "release-it"
   },
   "keywords": [
     "react-native",
     "ios",
-    "android"
+    "android",
+    "opus",
+    "audio",
+    "codec",
+    "compression",
+    "cpp",
+    "turbo-modules"
   ],
   "repository": {
     "type": "git",
@@ -133,11 +133,16 @@
     "source": "src",
     "output": "lib",
     "targets": [
-      "codegen",
+      [
+        "commonjs",
+        {
+          "esm": true
+        }
+      ],
       [
         "module",
         {
-          "esm": false
+          "esm": true
         }
       ],
       [
