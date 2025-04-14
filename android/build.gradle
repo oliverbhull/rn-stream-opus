@@ -110,8 +110,8 @@ dependencies {
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }
 
-react {
-  jsRootDir = file("../src/")
-  libraryName = "opus"
-  codegenJavaPackageName = "com.opus"
-}
+// react {
+//   jsRootDir = file("../src/")
+//   libraryName = "opus"
+//   codegenJavaPackageName = "com.opus"
+// }
