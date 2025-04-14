@@ -6,7 +6,7 @@ module.exports = {
     platforms: {
       android: {
         cxxModuleCMakeListsModuleName: 'react-native-opus',
-        cxxModuleCMakeListsPath: 'src/main/jni/CMakeLists.txt',
+        cxxModuleCMakeListsPath: 'CMakeLists.txt',
         cxxModuleHeaderName: 'NativeOpusTurboModule',
       },
     },

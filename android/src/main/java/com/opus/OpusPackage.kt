@@ -13,18 +13,8 @@ class OpusPackage : TurboReactPackage() {
   }
   
   override fun getReactModuleInfoProvider(): ReactModuleInfoProvider {
-    return ReactModuleInfoProvider {
-      mapOf(
-        "OpusTurbo" to ReactModuleInfo(
-          "OpusTurbo",
-          "OpusTurbo",
-          false, // canOverrideExistingModule
-          false, // needsEagerInit
-          true,  // hasConstants
-          false, // isCxxModule
-          true   // isTurboModule
-        )
-      )
-    }
+    // For C++ TurboModules, the C++ infrastructure provides the necessary info.
+    // We don't need to specify module info here.
+    return ReactModuleInfoProvider { emptyMap() }
   }
 } 

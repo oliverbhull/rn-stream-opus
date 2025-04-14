@@ -64,12 +64,6 @@ android {
     }
   }
 
-  externalNativeBuild {
-    cmake {
-      path "src/main/jni/CMakeLists.txt"
-    }
-  }
-
   buildFeatures {
     buildConfig true
   }
@@ -89,11 +83,16 @@ android {
     targetCompatibility JavaVersion.VERSION_1_8
   }
 
+  externalNativeBuild {
+    cmake {
+      path "CMakeLists.txt"
+    }
+  }
+
   sourceSets {
     main {
       java.srcDirs += [
-        "generated/java",
-        "generated/jni"
+        "${project.buildDir}/generated/source/codegen/java",
       ]
     }
   }

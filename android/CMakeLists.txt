@@ -9,18 +9,19 @@ add_compile_options(
     -std=c++17
 )
 
-# Resolve project root and library paths
-get_filename_component(PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../" ABSOLUTE)
+get_filename_component(PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../" ABSOLUTE)
 set(SHARED_DIR "${PROJECT_ROOT}/cpp")
 set(OPUS_LIB_DIR "${PROJECT_ROOT}/android/libs")
 
-# Add opus library (prebuilt)
-add_library(opus INTERFACE)
-target_include_directories(opus INTERFACE
-    ${SHARED_DIR}
+# Define opus as an IMPORTED library since it's prebuilt
+add_library(opus STATIC IMPORTED)
+
+# Set the location of the prebuilt library and the include directories
+set_target_properties(opus PROPERTIES
+    IMPORTED_LOCATION "${OPUS_LIB_DIR}/libopus-${ANDROID_ABI}.a"
+    INTERFACE_INCLUDE_DIRECTORIES "${SHARED_DIR}/opus"
 )
 
-# Add the main library
 add_library(react-native-opus STATIC
     ${SHARED_DIR}/NativeOpusTurboModule.cpp
 )
@@ -28,11 +29,11 @@ add_library(react-native-opus STATIC
 target_include_directories(react-native-opus
     PUBLIC
     ${SHARED_DIR}
-    ${PROJECT_ROOT}/android/generated/jni
 )
 
 target_link_libraries(react-native-opus
-    ${OPUS_LIB_DIR}/libopus-${ANDROID_ABI}.a
+    # Link the opus target name now
+    opus
     jsi
     react_nativemodule_core
     react_codegen_RNOpusSpec
