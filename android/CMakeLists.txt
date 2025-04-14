@@ -32,6 +32,6 @@ target_link_libraries(react-native-opus
     # Link the absolute path to the prebuilt library again
     ${OPUS_LIB_DIR}/libopus-${ANDROID_ABI}.a
     jsi
-    # react_nativemodule_core
+    react_nativemodule_core
     react_codegen_RNOpusSpec
 )
