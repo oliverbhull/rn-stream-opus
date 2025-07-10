@@ -16,7 +16,12 @@ import {
   Alert,
   useColorScheme,
 } from 'react-native';
-import { decodeMultipleOpusPackets } from 'react-native-opus';
+import { 
+  decodeMultipleOpusPackets, 
+  initializeStreamDecoder, 
+  decodeOpusFrame, 
+  resetOpusStreamDecoder 
+} from 'react-native-opus';
 
 // Hardcoded base64 Opus string (replace with actual data if needed)
 const BASE64_OPUS_STRING =
@@ -26,6 +31,8 @@ function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
   const [decodedResult, setDecodedResult] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [streamResult, setStreamResult] = useState<string | null>(null);
+  const [isStreamLoading, setIsStreamLoading] = useState(false);
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? '#000000' : '#F5F5F5', // Black or light gray
@@ -56,6 +63,45 @@ function App(): React.JSX.Element {
     }
   };
 
+  const handleStreamDecodePress = async () => {
+    setIsStreamLoading(true);
+    setStreamResult(null);
+    console.log('Attempting to stream decode...');
+    try {
+      // Initialize stream decoder
+      const initResult = await initializeStreamDecoder(16000, 1);
+      console.log('Stream decoder initialized:', initResult);
+      
+      if (!initResult.success) {
+        throw new Error(initResult.error || 'Failed to initialize stream decoder');
+      }
+
+      // Create a sample frame from the base64 string (first 40 bytes)
+      const buffer = Buffer.from(BASE64_OPUS_STRING, 'base64');
+      const frameData = new Uint8Array(buffer.slice(0, 40));
+      
+      // Decode the frame
+      const decodeResult = await decodeOpusFrame(frameData);
+      console.log('Frame decode result:', decodeResult);
+      
+      if (decodeResult.success && decodeResult.pcmData) {
+        setStreamResult(`Stream decode succeeded! Decoded ${decodeResult.samplesDecoded} samples. PCM data length: ${decodeResult.pcmData.length}`);
+      } else {
+        throw new Error(decodeResult.error || 'Failed to decode frame');
+      }
+      
+    } catch (error) {
+      console.error('Stream decoding failed:', error);
+      setStreamResult(null);
+      Alert.alert(
+        'Stream Decoding Error',
+        error instanceof Error ? error.message : 'An unknown error occurred'
+      );
+    } finally {
+      setIsStreamLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={backgroundStyle.backgroundColor} />
@@ -77,6 +123,26 @@ function App(): React.JSX.Element {
         {decodedResult && (
            <Text style={[styles.resultText, isDarkMode ? styles.resultTextDark : styles.resultTextLight]}>
              {decodedResult}
+           </Text>
+        )}
+        
+        <Pressable
+          style={({ pressed }) => [
+            styles.button,
+            isDarkMode ? styles.buttonDark : styles.buttonLight,
+            pressed && (isDarkMode ? styles.buttonDarkPressed : styles.buttonLightPressed),
+            isStreamLoading && styles.buttonDisabled,
+          ]}
+          onPress={handleStreamDecodePress}
+          disabled={isStreamLoading}
+        >
+          <Text style={[styles.buttonText, isDarkMode ? styles.buttonTextDark : styles.buttonTextLight]}>
+            {isStreamLoading ? 'Stream Decoding...' : 'Test Stream Decode'}
+          </Text>
+        </Pressable>
+        {streamResult && (
+           <Text style={[styles.resultText, isDarkMode ? styles.resultTextDark : styles.resultTextLight]}>
+             {streamResult}
            </Text>
         )}
       </View>

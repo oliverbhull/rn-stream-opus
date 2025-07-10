@@ -33,6 +33,11 @@ public:
     jsi::Value decodeMultipleOpusPackets(jsi::Runtime &rt, std::string packetsBase64, double packetSize);
     jsi::Value resetDecoderState(jsi::Runtime &rt);
     jsi::Value saveDecodedDataAsWav(jsi::Runtime &rt, std::string decodedDataBase64, std::string filepath, double sampleRate, double channels);
+    
+    // Frame-by-frame streaming methods
+    jsi::Value initializeStreamDecoder(jsi::Runtime &rt, double sampleRate, double channels);
+    jsi::Value decodeOpusFrame(jsi::Runtime &rt, std::string base64Frame);
+    jsi::Value resetOpusStreamDecoder(jsi::Runtime &rt);
 
 private:
     static std::string base64_encode(const std::vector<uint8_t>& input);
@@ -41,6 +46,13 @@ private:
     OpusDecoder* opusDecoder = nullptr;
     static constexpr opus_int32 DEFAULT_SAMPLE_RATE = 16000;
     static constexpr int DEFAULT_CHANNELS = 1;
+    
+    // Streaming decoder state
+    OpusDecoder* streamDecoder = nullptr;
+    opus_int32 streamSampleRate = DEFAULT_SAMPLE_RATE;
+    int streamChannels = DEFAULT_CHANNELS;
+    bool streamInitialized = false;
+    static constexpr int MAX_FRAME_SIZE = 5760; // Max frame size for 48kHz, 120ms frame
 };
 
 } // namespace facebook::react

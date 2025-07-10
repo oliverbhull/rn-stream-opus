@@ -24,6 +24,10 @@ NativeOpusTurboModule::~NativeOpusTurboModule() {
         opus_decoder_destroy(opusDecoder);
         opusDecoder = nullptr;
     }
+    if (streamDecoder) {
+        opus_decoder_destroy(streamDecoder);
+        streamDecoder = nullptr;
+    }
 }
 
 // Base64 encoding/decoding utility methods
@@ -281,6 +285,128 @@ jsi::Value NativeOpusTurboModule::saveDecodedDataAsWav(jsi::Runtime &rt, std::st
     } catch (const std::exception& e) {
         result.setProperty(rt, "success", false);
         result.setProperty(rt, "error", jsi::String::createFromUtf8(rt, e.what()));
+    }
+    
+    return result;
+}
+
+// Frame-by-frame streaming methods
+jsi::Value NativeOpusTurboModule::initializeStreamDecoder(jsi::Runtime &rt, double sampleRate, double channels) {
+    jsi::Object result = jsi::Object(rt);
+    
+    try {
+        // Clean up existing stream decoder if any
+        if (streamDecoder) {
+            opus_decoder_destroy(streamDecoder);
+            streamDecoder = nullptr;
+        }
+        
+        // Create new stream decoder with specified parameters
+        streamSampleRate = static_cast<opus_int32>(sampleRate);
+        streamChannels = static_cast<int>(channels);
+        
+        int error = 0;
+        streamDecoder = opus_decoder_create(streamSampleRate, streamChannels, &error);
+        
+        if (error != OPUS_OK || !streamDecoder) {
+            result.setProperty(rt, "success", false);
+            result.setProperty(rt, "error", jsi::String::createFromUtf8(rt, opus_strerror(error)));
+            streamInitialized = false;
+            return result;
+        }
+        
+        streamInitialized = true;
+        result.setProperty(rt, "success", true);
+        
+    } catch (const std::exception& e) {
+        result.setProperty(rt, "success", false);
+        result.setProperty(rt, "error", jsi::String::createFromUtf8(rt, e.what()));
+        streamInitialized = false;
+    }
+    
+    return result;
+}
+
+jsi::Value NativeOpusTurboModule::decodeOpusFrame(jsi::Runtime &rt, std::string base64Frame) {
+    jsi::Object result = jsi::Object(rt);
+    
+    if (!streamInitialized || !streamDecoder) {
+        result.setProperty(rt, "success", false);
+        result.setProperty(rt, "error", jsi::String::createFromUtf8(rt, "Stream decoder not initialized"));
+        return result;
+    }
+    
+    try {
+        // Decode base64 frame data
+        std::vector<uint8_t> frameData = base64_decode(base64Frame);
+        
+        if (frameData.empty() && !base64Frame.empty()) {
+            result.setProperty(rt, "success", false);
+            result.setProperty(rt, "error", jsi::String::createFromUtf8(rt, "Invalid base64 frame data"));
+            return result;
+        }
+        
+        // Prepare output buffer for decoded PCM data
+        float pcmBuffer[MAX_FRAME_SIZE * streamChannels];
+        
+        // Decode the Opus frame
+        int samplesDecoded = opus_decode_float(
+            streamDecoder,
+            frameData.data(),
+            static_cast<opus_int32>(frameData.size()),
+            pcmBuffer,
+            MAX_FRAME_SIZE,
+            0
+        );
+        
+        if (samplesDecoded < 0) {
+            result.setProperty(rt, "success", false);
+            result.setProperty(rt, "error", jsi::String::createFromUtf8(rt, opus_strerror(samplesDecoded)));
+            return result;
+        }
+        
+        // Create Float32Array from the decoded PCM data
+        size_t totalSamples = samplesDecoded * streamChannels;
+        size_t bufferSize = totalSamples * sizeof(float);
+        
+        auto arrayBuffer = jsi::ArrayBuffer(rt, bufferSize);
+        std::memcpy(arrayBuffer.data(rt), pcmBuffer, bufferSize);
+        
+        jsi::Object typedArray = rt.global().getPropertyAsObject(rt, "Float32Array");
+        jsi::Value args[] = {
+            jsi::Value(rt, arrayBuffer),
+            jsi::Value(0),
+            jsi::Value(static_cast<double>(totalSamples))
+        };
+        jsi::Object float32Array = typedArray.asFunction(rt).callAsConstructor(rt, args, 3).asObject(rt);
+        
+        result.setProperty(rt, "success", true);
+        result.setProperty(rt, "pcmData", float32Array);
+        result.setProperty(rt, "samplesDecoded", samplesDecoded);
+        
+    } catch (const std::exception& e) {
+        result.setProperty(rt, "success", false);
+        result.setProperty(rt, "error", jsi::String::createFromUtf8(rt, e.what()));
+    }
+    
+    return result;
+}
+
+jsi::Value NativeOpusTurboModule::resetOpusStreamDecoder(jsi::Runtime &rt) {
+    jsi::Object result = jsi::Object(rt);
+    
+    if (!streamInitialized || !streamDecoder) {
+        result.setProperty(rt, "success", false);
+        result.setProperty(rt, "error", jsi::String::createFromUtf8(rt, "Stream decoder not initialized"));
+        return result;
+    }
+    
+    int error = opus_decoder_ctl(streamDecoder, OPUS_RESET_STATE);
+    if (error == OPUS_OK) {
+        result.setProperty(rt, "success", true);
+    } else {
+        result.setProperty(rt, "success", false);
+        result.setProperty(rt, "error", jsi::String::createFromUtf8(rt, opus_strerror(error)));
     }
     
     return result;

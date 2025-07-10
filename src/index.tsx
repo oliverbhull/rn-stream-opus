@@ -30,3 +30,28 @@ export function saveDecodedDataAsWav(
 }> {
   return OpusTurboModule.saveDecodedDataAsWav(decodedDataBase64, filepath, sampleRate, channels);
 }
+
+// Frame-by-frame streaming API
+export function initializeStreamDecoder(
+  sampleRate: number,
+  channels: number
+): Promise<{ success: boolean; error?: string }> {
+  return OpusTurboModule.initializeStreamDecoder(sampleRate, channels);
+}
+
+export function decodeOpusFrame(
+  frameData: Uint8Array
+): Promise<{
+  success: boolean;
+  pcmData?: Float32Array;
+  samplesDecoded?: number;
+  error?: string;
+}> {
+  // Convert Uint8Array to base64 string for native module
+  const base64Frame = Buffer.from(frameData).toString('base64');
+  return OpusTurboModule.decodeOpusFrame(base64Frame);
+}
+
+export function resetOpusStreamDecoder(): Promise<{ success: boolean; error?: string }> {
+  return OpusTurboModule.resetOpusStreamDecoder();
+}

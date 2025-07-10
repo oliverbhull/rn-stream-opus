@@ -27,6 +27,23 @@ export interface Spec extends TurboModule {
     filepath?: string;
     error?: string;
   }>;
+
+  // Frame-by-frame streaming methods
+  initializeStreamDecoder(
+    sampleRate: number,
+    channels: number
+  ): Promise<{ success: boolean; error?: string }>;
+
+  decodeOpusFrame(
+    base64Frame: string
+  ): Promise<{
+    success: boolean;
+    pcmData?: Float32Array;
+    samplesDecoded?: number;
+    error?: string;
+  }>;
+
+  resetOpusStreamDecoder(): Promise<{ success: boolean; error?: string }>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('OpusTurbo');
