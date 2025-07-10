@@ -1,60 +1,39 @@
-# react-native-opus
+# rn-stream-opus
 
-A library for decoding Opus audio packets in React Native with both batch and frame-by-frame streaming capabilities.
+A React Native library optimized for real-time Opus audio streaming with frame-by-frame decoding capabilities. Built specifically for streaming audio applications that require low-latency, persistent decoder state.
 
 ## Installation
 
 ```sh
-npm install react-native-opus
+npm install rn-stream-opus
 ```
 
 ## Usage
 
-The `react-native-opus` library provides functions to decode Opus audio packets from base64-encoded strings with both batch and frame-by-frame streaming capabilities.
+The `rn-stream-opus` library provides efficient frame-by-frame Opus decoding with persistent decoder state, perfect for real-time audio streaming applications.
 
 ## API Methods
 
-### Batch Decoding
-
-- **`decodeMultipleOpusPackets(base64String: string, frameSize: number)`**: Decodes multiple Opus packets from a base64-encoded string. The `frameSize` parameter specifies the frame size in bytes.
-
-### Frame-by-Frame Streaming
+### Primary Streaming API
 
 - **`initializeStreamDecoder(sampleRate: number, channels: number)`**: Initializes the stream decoder with specified sample rate and channel count.
 - **`decodeOpusFrame(frameData: Uint8Array)`**: Decodes a single Opus frame and returns Float32Array PCM data.
 - **`resetOpusStreamDecoder()`**: Resets the stream decoder state.
 
+### Legacy Batch API
+
+- **`decodeMultipleOpusPackets(base64String: string, frameSize: number)`**: Decodes multiple Opus packets from a base64-encoded string. The `frameSize` parameter specifies the frame size in bytes.
+
 ## Examples
 
-### Example: Batch Decoding
-
-```js
-import { decodeMultipleOpusPackets } from 'react-native-opus';
-
-// Hardcoded base64 string (100 characters)
-const base64String = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-
-// Decode the Opus packet
-async function decodeAudio() {
-  try {
-    const decodedPackets = await decodeMultipleOpusPackets(base64String, 40);
-    console.log("Decoded packets:", decodedPackets);
-  } catch (error) {
-    console.error("Error decoding audio:", error);
-  }
-}
-
-decodeAudio();
-```
-
-### Example: Frame-by-Frame Streaming
+### Real-Time Streaming (Primary Use Case)
 
 ```js
 import { 
   initializeStreamDecoder, 
   decodeOpusFrame, 
   resetOpusStreamDecoder 
-} from 'react-native-opus';
+} from 'rn-stream-opus';
 
 async function streamDecodeAudio() {
   try {
@@ -64,16 +43,19 @@ async function streamDecodeAudio() {
       throw new Error(initResult.error);
     }
 
-    // Decode individual frames
+    // Decode individual frames as they arrive
     const frameData = new Uint8Array([/* your opus frame bytes */]);
     const decodeResult = await decodeOpusFrame(frameData);
     
     if (decodeResult.success && decodeResult.pcmData) {
       console.log(`Decoded ${decodeResult.samplesDecoded} samples`);
       console.log('PCM data:', decodeResult.pcmData); // Float32Array
+      
+      // Process PCM data for real-time playback
+      processAudioData(decodeResult.pcmData);
     }
 
-    // Reset decoder when done
+    // Reset decoder when stream ends
     await resetOpusStreamDecoder();
   } catch (error) {
     console.error("Error streaming decode:", error);
@@ -83,13 +65,72 @@ async function streamDecodeAudio() {
 streamDecodeAudio();
 ```
 
+### Streaming with Audio Processing
+
+```js
+import { 
+  initializeStreamDecoder, 
+  decodeOpusFrame 
+} from 'rn-stream-opus';
+
+class OpusStreamer {
+  constructor() {
+    this.initialized = false;
+  }
+
+  async initialize(sampleRate = 16000, channels = 1) {
+    const result = await initializeStreamDecoder(sampleRate, channels);
+    this.initialized = result.success;
+    return result;
+  }
+
+  async processFrame(opusFrame) {
+    if (!this.initialized) {
+      throw new Error('Decoder not initialized');
+    }
+
+    const result = await decodeOpusFrame(opusFrame);
+    
+    if (result.success && result.pcmData) {
+      // Direct access to Float32Array PCM data
+      return {
+        pcm: result.pcmData,
+        samples: result.samplesDecoded,
+        timestamp: Date.now()
+      };
+    }
+    
+    throw new Error(result.error || 'Decode failed');
+  }
+}
+
+// Usage
+const streamer = new OpusStreamer();
+await streamer.initialize(16000, 1);
+
+// Process frames as they arrive
+const audioData = await streamer.processFrame(frameBytes);
+playAudio(audioData.pcm);
+```
+
 ## Key Features
 
-- **Batch Processing**: Decode multiple packets at once for efficiency
-- **Frame-by-Frame Streaming**: Real-time decoding with persistent decoder state
-- **Float32Array Output**: Direct PCM data for audio processing
-- **Cross-Platform**: Works on both iOS and Android
-- **Memory Efficient**: Optimized for mobile devices
+- **🎯 Real-Time Streaming**: Optimized for frame-by-frame decoding with persistent decoder state
+- **⚡ Low Latency**: Minimal processing overhead for real-time audio applications
+- **🔄 Float32Array Output**: Direct PCM data ready for audio processing and playback
+- **📱 Cross-Platform**: Native TurboModule implementation for iOS and Android
+- **🧠 Memory Efficient**: Optimized buffer management for mobile devices
+- **🔧 Easy Integration**: Simple API designed for streaming audio applications
+- **🔄 Persistent State**: Decoder maintains state across frames for continuous streams
+
+## Use Cases
+
+- **Real-time voice communication apps**
+- **Audio streaming applications**
+- **Voice memo recording/playback**
+- **Live audio processing**
+- **Bluetooth audio streaming**
+- **WebRTC audio pipelines**
 
 ## Contributing
 
